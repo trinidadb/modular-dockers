@@ -1,0 +1,43 @@
+services:
+  database-postgres:
+    image: 'postgres:latest'                                    # Official Postgres image from DockerHub (we use the last version)
+    ports:
+      - 5432:5432                                               # By default, a Postgres database is running on the 5432 port. The syntax is [port we want on our machine]:[port we want to retrieve in the container]
+    restart: on-failure                                         # Docker will only restart the container if it exits with a non-zero exit code, indicating a failure. If the container exits successfully (with an exit code of 0), it will not restart.
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      # This creates the initial user who will have superuser privileges by default:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - postgres-network
+    volumes:                                                    # Use a volume to persist data on your computer.By default, the Postgres data will be only in the container. If you decide to delete the container, all the data are going to disappear definitively.
+      - ${PWD}/db-data/:/var/lib/postgresql/data/               # To persist the data, we will use a Docker volume. It will share the database date inside of your container with a local folder of your computer. We share the folder `db-data` in our root repository,
+      - ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql    # with the default PostgreSQL data path. It means that every time the repository is modifying the data inside of `/var/lib/postgresql/data/`, automatically the change will appear in `db-data`
+                                                                # It is also possible to add an init script that will execute when the database is first run
+
+  pgadmin:                                                      # Add a pgadmin service to access your database via a UI
+    image: dpage/pgadmin4
+    ports:
+      - 5050:80
+    restart: on-failure
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - database-postgres
+    networks:
+      - postgres-network
+    volumes:
+      - ${PWD}/pgadmin-data/:/var/lib/pgadmin/                 
+
+  # The pgadmin service allows you - once run - to access your postgreSQL database via a browser and quickly inspect or manage your data from there. 
+  # After you ran docker compose you can access pgadmin at localhost:5050 in your browser and login with the admin email and password as specified in the .env file.
+  # Once logged in, you need to connect to the database in your docker network. To do so, right click on 'servers' on the left side and go to 'Servers > Register > Server...'. 
+  # In the general tab, specify a name of your liking. In the connection tab, as the host name enter the name of the postgres service in the docker-compose.yml file (in our case "my-postgres-db") 
+  # and as the port the post inside the docker-network (in our case the default 5432).
+
+networks:             # The networks section in Docker Compose defines custom networks that services can connect to. This allows services (like my-postgres-db and pgadmin in your case) to communicate with each other within an isolated network.
+  postgres-network:   # Each service can be attached to one or more networks. In this example, both my-postgres-db and pgadmin are connected to the postgres-network
+    driver: bridge    # In Docker, a bridge network is the default type for networking when creating isolated containers that can communicate with each other but are isolated from other services running on the host. 
+                      # This creates a virtual private network between the services, meaning they can communicate within this private network using their container names as hostnames (e.g.,database-postgres, my-postgres-db).

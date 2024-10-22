@@ -1,0 +1,73 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_NAME}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_USER_PASSWORD}
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./data:/data/db
+      - ./data/log:/var/log/mongodb/
+    restart: on-failure
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb                                  # MongoDB container name. 
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true                               # Enable admin access to all databases.
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_ROOT_USER}                # ME_CONFIG_MONGODB_ADMINUSERNAME and ME_CONFIG_MONGODB_ADMINPASSWORD credentials should match the MONGO_INITDB_ROOT_USERNAME and MONGO_INITDB_ROOT_PASSWORD
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_ROOT_USER_PASSWORD}       # This means these credentials allow Mongo Express to interact with the MongoDB server with full administrative access.
+      - ME_CONFIG_BASICAUTH_USERNAME=${ME_USERNAME}                       # These environment variables control the basic authentication for the Mongo Express web interface, not MongoDB itself. 
+      - ME_CONFIG_BASICAUTH_PASSWORD=${ME_PASSWORD}
+    depends_on:
+      - mongodb
+    ports:
+      - 8081:8081
+    restart: on-failure
+
+  
+# MongoDB and Mongo Express are not explicitly using a custom Docker network because by default, 
+# Docker Compose creates an isolated network for your services in the same docker-compose.yml file. 
+# All services defined in the same docker-compose.yml are connected to this default network, 
+# so they can communicate with each other using their service names as hostnames, even without a custom network configuration.
+
+
+# Volumes can also be defined in the following way (declared in the columes section):
+
+# services:
+#   database-mongo:
+#     ...
+#     volumes:
+#       - mongodb_data:/data/db
+#     ...
+
+#   mongo-express:
+#     ...
+
+# volumes: 
+#   mongodb_data:
+#     driver: local
+#     name: mongodb_data
+
+
+# In this case, the volume mongodb_data is explicitly defined in the volumes section at the bottom of the docker-compose.yml file. 
+# This is a named volume, meaning Docker will manage this volume independently of the container’s lifecycle. 
+# This approach offers several benefits:
+
+# Data Persistence: The data stored in mongodb_data will persist even if you remove or recreate the container. Docker manages the lifecycle of this volume independently.
+# Reusable: The named volume can be reused across multiple containers or Docker Compose services.
+# Isolation: Docker stores named volumes in a separate location on the host machine (typically under /var/lib/docker/volumes/ on Linux systems). This isolation ensures that the data is not tied directly to a specific folder on your host machine.
+# Control Over Volume Driver: You can specify a volume driver (like local in this case), allowing you to define how and where the volume is stored.
+
+# On the contrary, a bind mount (for example, the volume is directly defined inside the service section, and a bind mount is used)
+# links a directory on the host machine’s filesystem to a directory inside the container. The host machine directory is explicitly specified.
+
+# Direct Control: You have direct control over where the data is stored on your host machine (in this case, ./db-data inside your project folder).
+# Manual Management: The directory on the host machine must exist, and you need to manage its content manually (backup, cleanup, etc.).
+# Coupled with the Host: The data is tied to the host machine’s filesystem. If you move or delete the folder ./db-data, the container will lose access to its data.
+# Less Isolation: Since the folder is tied to your host filesystem, it might not be as isolated as Docker-managed volumes.
