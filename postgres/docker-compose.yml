@@ -1,6 +1,7 @@
 services:
-  database-postgres:
+  postgresdb:
     image: 'postgres:latest'                                    # Official Postgres image from DockerHub (we use the last version)
+    container_name: postgresdb
     ports:
       - 5432:5432                                               # By default, a Postgres database is running on the 5432 port. The syntax is [port we want on our machine]:[port we want to retrieve in the container]
     restart: on-failure                                         # Docker will only restart the container if it exits with a non-zero exit code, indicating a failure. If the container exits successfully (with an exit code of 0), it will not restart.
@@ -18,14 +19,16 @@ services:
 
   pgadmin:                                                      # Add a pgadmin service to access your database via a UI
     image: dpage/pgadmin4
+    container_name: pgadmin
     ports:
       - 5050:80
     restart: on-failure
+    user: '$UID:$GID' # This line was added after having trouble with permissions in ubuntu, to write/create a directory in /var/lib/pgadmin/sessions
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
-      - database-postgres
+      - postgresdb
     networks:
       - postgres-network
     volumes:

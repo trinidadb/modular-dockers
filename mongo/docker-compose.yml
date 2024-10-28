@@ -9,9 +9,9 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_USER_PASSWORD}
     volumes:
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-      - ./data:/data/db
-      - ./data/log:/var/log/mongodb/
+      - ${PWD}/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ${PWD}/data:/data/db
+      - ${PWD}/data/log:/var/log/mongodb/
     restart: on-failure
 
   mongo-express:
