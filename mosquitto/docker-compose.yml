@@ -1,0 +1,42 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto-broker          
+    ports:
+      - "1883:1883" #default mqtt port
+      - "9001:9001" #default mqtt port for websockets
+    restart: on-failure                                         
+    volumes:
+      - ./config:/mosquitto/config:rw
+      - ./data:/mosquitto/data:rw
+      - ./log:/mosquitto/log:rw
+
+  emqx-dashboard:
+    image: emqx/emqx:latest
+    container_name: emqx-dashboard
+    ports:
+      - "8081:18083"  # Web interface port for EMQX Dashboard
+      - "1884:1883"  # MQTT port for EMQX (optional)
+      - "9002:8083"  # WebSocket port for EMQX (optional)
+    environment:
+      - EMQX_NAME=emqx-dashboard # By default username: admin, password=public
+    depends_on:
+      - mosquitto
+
+  # mqtt-explorer:
+  #   build:
+  #     context: https://github.com/thomasnordquist/MQTT-Explorer.git
+  #     dockerfile: Dockerfile
+  #   container_name: mqtt-explorer
+  #   ports:
+  #     - "5900:5900"  # VNC port to access the MQTT Explorer GUI
+  #   depends_on:
+  #     - mosquitto
+
+  # mqtt-web-client:
+  #   image: hivemq/hivemq-mqtt-web-client
+  #   container_name: mqtt-web-client
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - mosquitto
