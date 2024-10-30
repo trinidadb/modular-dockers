@@ -17,3 +17,14 @@ If no data is inserted into it, MongoDB will not create it
 A MongoDB database is created automatically when you first insert data into it.
 The same thing happens with collections, you don't have to explicitly create them.
 */
+
+db.createUser({
+    user: "user1",
+    pwd: "password1",
+    roles: [{ role: "readWrite", db: "my-db" }]
+  });
+
+// As this user is created inside the database, to connecto to it you just need:
+// >>mongo --host localhost --port 27017 -u user1 -p password1 "my-db"
+// instead of:
+// >>mongo --host localhost --port 27017 -u user1 -p password1 --authenticationDatabase admin "my-db"
