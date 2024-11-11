@@ -13,7 +13,7 @@ services:
     networks:
       - postgres-network
     volumes:                                                    # Use a volume to persist data on your computer.By default, the Postgres data will be only in the container. If you decide to delete the container, all the data are going to disappear definitively.
-      - ${PWD}/db-data/:/var/lib/postgresql/data/               # To persist the data, we will use a Docker volume. It will share the database date inside of your container with a local folder of your computer. We share the folder `db-data` in our root repository,
+      - ${PWD}/db_data/:/var/lib/postgresql/data/               # To persist the data, we will use a Docker volume. It will share the database date inside of your container with a local folder of your computer. We share the folder `db-data` in our root repository,
       - ${PWD}/init.sql:/docker-entrypoint-initdb.d/init.sql    # with the default PostgreSQL data path. It means that every time the repository is modifying the data inside of `/var/lib/postgresql/data/`, automatically the change will appear in `db-data`
                                                                 # It is also possible to add an init script that will execute when the database is first run
 
@@ -32,7 +32,7 @@ services:
     networks:
       - postgres-network
     volumes:
-      - ${PWD}/pgadmin-data/:/var/lib/pgadmin/                 
+      - ${PWD}/pgadmin_data/:/var/lib/pgadmin/                 
 
   # The pgadmin service allows you - once run - to access your postgreSQL database via a browser and quickly inspect or manage your data from there. 
   # After you ran docker compose you can access pgadmin at localhost:5050 in your browser and login with the admin email and password as specified in the .env file.
